@@ -1,0 +1,23 @@
+[project]
+name = "rag-from-scratch"
+version = "0.1.0"
+description = "RAG implementation from first principles"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "anthropic>=0.116.0",
+    "openai>=2.45.0",
+    "python-dotenv>=1.2.2",
+    "sentence-transformers>=5.6.0",
+    "torch>=2.13.0",
+    "torchvision>=0.28.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
