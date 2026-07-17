@@ -1,5 +1,6 @@
 from pathlib import Path
 from chunker import chunk_text
+from embedder import embed_chunks
 
 def load_corpus(data_dir: str = "data") -> str:
     """Concatenate all .txt files in the data directory into one string"""
@@ -15,7 +16,6 @@ if __name__ == "__main__":
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
 
-    # Prrint 3 sample chunks
-    for i in [0, 1, 2]:
-        print(f"\n--- Chunk {i} ---")
-        print(chunks[i])
+    embeddings = embed_chunks(chunks)
+    print(f"Embeddings shape: {embeddings.shape}")
+    print(f"Embeddings[0] = {embeddings[0]}")
