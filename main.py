@@ -1,6 +1,7 @@
 from pathlib import Path
 from chunker import chunk_text
 from embedder import embed_chunks
+from retriever import retrieve
 
 def load_corpus(data_dir: str = "data") -> str:
     """Concatenate all .txt files in the data directory into one string"""
@@ -11,11 +12,22 @@ def load_corpus(data_dir: str = "data") -> str:
 
 if __name__ == "__main__":
     text = load_corpus()
-    print(f"Loaded {len(text)} characters")
-
     chunks = chunk_text(text)
-    print(f"Created {len(chunks)} chunks")
-
     embeddings = embed_chunks(chunks)
-    print(f"Embeddings shape: {embeddings.shape}")
-    print(f"Embeddings[0] = {embeddings[0]}")
+    print(f"Indexed {len(chunks)} chunks")
+
+    # Test queries
+    test_queries = [
+        "which countries were the soldiers from",
+        "what does the dog that runs finds",
+        "einstein's equation is about what",
+        "the spanish colonel",
+        "what is a noun"
+    ]
+
+    for query in test_queries:
+        print(f"\n=== Query: {query} ===")
+        results = retrieve(query, chunks, embeddings, k=3)
+        for chunk, score in results:
+            print(f"\n[score: {score:.3f}]")
+            print(chunk[:200]) # print first 200 characters to output
