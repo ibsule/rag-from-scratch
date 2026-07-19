@@ -18,21 +18,23 @@ def answer_question(query: str, chunks: list[str], embeddings) -> str:
     prompt = build_prompt(query, retrieved_texts)
     return generate_answer(prompt)
 
-if __name__ == "__main__":
+def main():
+    print("Loading and indexing corpus...")
     text = load_corpus()
-    chunks = chunk_text(text)
+    chunks = chunk_text(text, chunk_size=500, overlap=50)
     embeddings = embed_chunks(chunks)
-    print(f"Indexed {len(chunks)} chunks")
+    print(f"Ready to go...Indexed {len(chunks)} chunks from the provided corpus")
 
-    # Test queries
-    test_queries = [
-        "Who invented the AC induction motor?",
-        "What year did the Wright brothers applied to patent?",
-        "which countries were the soldiers from?",
-        "einstein's equation is about what?",
-    ]
+    print("Ask as question (or type 'quit' to exit):\n")
+    while True:
+        query = input("q> ").strip()
+        if query.lower() in ('quit', 'exit', 'q'):
+            break
+        if not query:
+            continue
 
-    for query in test_queries:
-        print(f"\n=== Query: {query} ===")
         answer = answer_question(query, chunks, embeddings)
-        print(f"A: {answer}\n")
+        print(f"\na< {answer}\n")
+
+if __name__ == "__main__":
+    main()
