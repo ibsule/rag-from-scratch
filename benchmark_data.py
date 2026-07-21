@@ -13,7 +13,7 @@ def make_large_chunk_set(multiplier: int = 30) -> list[str]:
     
     return base_chunks * multiplier
 
-chunks = make_large_chunk_set(multiplier=2)
+chunks = make_large_chunk_set(multiplier=10)
 print(f"Benchmarking with {len(chunks)} chunks")
 
 print("Embedding...")

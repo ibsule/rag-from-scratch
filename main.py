@@ -1,9 +1,10 @@
 from pathlib import Path
 from chunker import chunk_text
-from embedder import embed_chunks
+from embedder import embed_chunks, get_model
 from retriever import retrieve
 from prompt import build_prompt
 from generator import generate_answer
+from vector_store import VectorStore
 
 def load_corpus(data_dir: str = "data") -> str:
     """Concatenate all .txt files in the data directory into one string"""
@@ -12,18 +13,34 @@ def load_corpus(data_dir: str = "data") -> str:
         all_text += filepath.read_text(encoding="utf-8") + "\n\n"
     return all_text
 
-def answer_question(query: str, chunks: list[str], embeddings) -> str:
-    retrieved = retrieve(query, chunks, embeddings, k=3)
-    retrieved_texts = [chunk for chunk, score in retrieved]
-    prompt = build_prompt(query, retrieved_texts)
-    return generate_answer(prompt)
-
-def main():
-    print("Loading and indexing corpus...")
+def build_or_load_store() -> VectorStore:
+    if VectorStore.exists():
+        print("found existing index, loading from disk...")
+        return VectorStore.load()
+    
+    print("No existing index found. building from scratch...")
     text = load_corpus()
     chunks = chunk_text(text, chunk_size=500, overlap=50)
     embeddings = embed_chunks(chunks)
-    print(f"Ready to go...Indexed {len(chunks)} chunks from the provided corpus")
+
+    store = VectorStore(dimension=384)
+    store.add(chunks, embeddings)
+    store.save()
+    print(f"Indexed {len(chunks)} chunks and saved to disk.")
+    return store
+
+def answer_question(query: str, store: VectorStore) -> str:
+    model = get_model()
+    query_embedding = model.encode(query)
+    results = store.search(query_embedding, k=3)
+    retrieved_texts = [chunk for chunk, store in results]
+    prompt = build_prompt(query, retrieved_texts)
+    return generate_answer(prompt)
+
+
+def main():
+    store = build_or_load_store()
+    print(f"Ready. {len(store.chunks)} chunks indexed.\n")
 
     print("Ask as question (or type 'quit' to exit):\n")
     while True:
@@ -32,8 +49,7 @@ def main():
             break
         if not query:
             continue
-
-        answer = answer_question(query, chunks, embeddings)
+        answer = answer_question(query, store)
         print(f"\na< {answer}\n")
 
 if __name__ == "__main__":

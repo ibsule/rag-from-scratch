@@ -1,5 +1,7 @@
 import faiss
 import numpy as np
+import json
+from pathlib import Path
 
 class VectorStore:
     def __init__(self, dimension: int = 384):
@@ -7,6 +9,7 @@ class VectorStore:
         # Since our embeddings are normalised, inner product == cosine similarty
         self.index = faiss.IndexFlatIP(dimension)
         self.chunks = []
+        self.dimension = dimension
 
     def add(self, chunks: list[str], embeddings: np.ndarray):
         embeddings = np.array(embeddings).astype("float32") # FAISS requires float32
@@ -24,3 +27,24 @@ class VectorStore:
             results.append((self.chunks[idx], float(score)))
         
         return results
+    
+    def save(self, dir_path: str = "index_data"):
+        """persist the FAISS index and the chunk text to disk"""
+        Path(dir_path).mkdir(exist_ok=True)
+        faiss.write_index(self.index, f"{dir_path}/index.faiss")
+        with open(f"{dir_path}/chunks.json", "w") as f:
+            json.dump(self.chunks, f)
+
+    @classmethod
+    def load(cls, dir_path: str = "index_data", dimension: int = 384) -> "VectorStore":
+        """Load a previously saved index and chunks from disk."""
+        store = cls(dimension=dimension)
+        store.index = faiss.read_index(f"{dir_path}/index.faiss")
+        with open(f"{dir_path}/chunks.json", "r") as f:
+            store.chunks = json.load(f)
+        return store
+    
+    @staticmethod
+    def exists(dir_path: str = "index_data") -> bool: 
+        """check if a saved index already exists on disk"""
+        return Path(f"{dir_path}/index.faiss").exists()
